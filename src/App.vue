@@ -1,5 +1,5 @@
 <template>
-  <h1>Enter a seed phrase</h1>
+  <h1>Enter a prompt</h1>
   <input type="text" v-model="inputText">
   <button @click="generate">Generate</button>
   <h1>GPT-2 continuation</h1>
@@ -8,7 +8,10 @@
 </template>
 
 <script>
-import deepai from 'deepai'
+const host = "localhost"
+const port = 8000
+const httpProtocol = "http"
+const apiURL = `${httpProtocol}://${host}:${port}`
 
 export default {
   name: 'App',
@@ -35,17 +38,23 @@ export default {
       this.$refs.waiting.innerHTML = ''
     },
     generate () {
+      this.$refs.output.innerHTML = ''
       this.startWaiting()
-      deepai.callStandardApi("text-generator", {
-        text: this.inputText
-      }).then(result => {
+
+      const requestOptions = {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: this.inputText })
+      }
+      return fetch(`${apiURL}/generate`, requestOptions)
+      .then(response => {
+          return response.json()
+      })
+      .then(result => {
         this.stopWaiting()
-        deepai.renderResultIntoElement(result, this.$refs.output);
+        this.$refs.output.innerHTML = result.result[0]
       })
     }
-  },
-  created () {
-    deepai.setApiKey('bc228f67-6b5d-4664-8b2c-4a7703846222')
   }
 }
 </script>
